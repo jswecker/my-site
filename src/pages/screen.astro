@@ -1,0 +1,40 @@
+---
+const title = "Party Jukebox — Screen";
+---
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+  </head>
+  <body class="min-h-screen bg-neutral-950 text-neutral-100">
+    <main class="mx-auto max-w-3xl p-6">
+      <h1 class="text-3xl font-bold">Top Requests</h1>
+      <p class="text-neutral-300 mt-1">Auto-updates every ~2s</p>
+      <div id="list" class="mt-6 space-y-3"></div>
+    </main>
+
+    <script type="module">
+      const list = document.getElementById("list");
+
+      async function refresh() {
+        const r = await fetch("/api/requests?limit=10");
+        const data = await r.json();
+        list.innerHTML = (data.results || []).map((row, i) => `
+          <div class="rounded-2xl bg-neutral-900 ring-1 ring-neutral-800 p-5 flex items-center justify-between">
+            <div>
+              <div class="text-sm text-neutral-400">#${i+1}</div>
+              <div class="text-2xl font-bold">${row.track_name}</div>
+              <div class="text-lg text-neutral-300">${row.artist_name}</div>
+            </div>
+            <div class="text-4xl font-black">${row.votes}</div>
+          </div>
+        `).join("");
+      }
+
+      refresh();
+      setInterval(refresh, 2500);
+    </script>
+  </body>
+</html>
+

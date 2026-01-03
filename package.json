@@ -12,7 +12,9 @@
     "astro": "^5.16.6"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260103.0",
     "@tailwindcss/vite": "^4.1.18",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "wrangler": "^4.54.0"
   }
 }
