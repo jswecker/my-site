@@ -21,9 +21,7 @@ const title = "Party Jukebox — Screen";
 	    try {
 	      list.innerHTML = `<div class="text-neutral-400">Loading…</div>`;
 
-	      const r = await fetch(`/api/requests?limit=10&t=${Date.now()}`, {
-		cache: "no-store",
-	      });
+	      const r = await fetch("/api/requests?limit=10&sort=recent", { cache: "no-store" });
 
 	      if (!r.ok) {
 		const txt = await r.text().catch(() => "");
