@@ -26,17 +26,29 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async ({ env }) =
       `
     ).all();
 
-    const payload = results ?? [];
+    const rows = (results ?? []).map((r: any) => ({
+      // original iTunes-ish keys
+      ...r,
 
-    // Return an envelope + also keep it easy to inspect
-    return new Response(JSON.stringify({ ok: true, results: payload }), {
+      // aliases for whatever the UI expects
+      title: r.trackName,
+      artist: r.artistName,
+      album: r.collectionName,
+      artwork: r.artworkUrl100,
+
+      // some UIs use `count` or `requests`
+      count: r.requestCount,
+      requests: r.requestCount,
+    }));
+
+    return new Response(JSON.stringify({ ok: true, results: rows }), {
       headers: { "content-type": "application/json" },
     });
   } catch (e: any) {
-    return new Response(
-      JSON.stringify({ ok: false, error: String(e?.message ?? e) }),
-      { status: 500, headers: { "content-type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ ok: false, error: String(e?.message ?? e) }), {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    });
   }
 };
 
