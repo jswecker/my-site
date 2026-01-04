@@ -11,37 +11,14 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async ({ env }) =
 
     const { results } = await env.DB.prepare(
       `
-      SELECT
-        track_id        AS trackId,
-        track_name      AS trackName,
-        artist_name     AS artistName,
-        album_name      AS collectionName,
-        artwork_url     AS artworkUrl100,
-        track_time_ms   AS trackTimeMillis,
-        votes           AS votes,
-        request_count   AS requestCount,
-        updated_at      AS updatedAt
+      SELECT *
       FROM requests
       ORDER BY votes DESC, request_count DESC, updated_at DESC
       `
     ).all();
 
-    const rows = (results ?? []).map((r: any) => ({
-      // original iTunes-ish keys
-      ...r,
-
-      // aliases for whatever the UI expects
-      title: r.trackName,
-      artist: r.artistName,
-      album: r.collectionName,
-      artwork: r.artworkUrl100,
-
-      // some UIs use `count` or `requests`
-      count: r.requestCount,
-      requests: r.requestCount,
-    }));
-
-    return new Response(JSON.stringify({ ok: true, results: rows }), {
+    // Return the rows as-is (snake_case keys like track_name/artist_name)
+    return new Response(JSON.stringify({ ok: true, results: results ?? [] }), {
       headers: { "content-type": "application/json" },
     });
   } catch (e: any) {
