@@ -14,27 +14,58 @@ const title = "Party Jukebox — Screen";
       <div id="list" class="mt-6 space-y-3"></div>
     </main>
 
-    <script type="module">
-      const list = document.getElementById("list");
+	<script type="module">
+	  const list = document.getElementById("list");
 
-      async function refresh() {
-        const r = await fetch("/api/requests?limit=10");
-        const data = await r.json();
-        list.innerHTML = (data.results || []).map((row, i) => `
-          <div class="rounded-2xl bg-neutral-900 ring-1 ring-neutral-800 p-5 flex items-center justify-between">
-            <div>
-              <div class="text-sm text-neutral-400">#${i+1}</div>
-              <div class="text-2xl font-bold">${row.track_name}</div>
-              <div class="text-lg text-neutral-300">${row.artist_name}</div>
-            </div>
-            <div class="text-4xl font-black">${row.votes}</div>
-          </div>
-        `).join("");
-      }
+	  async function refresh() {
+	    try {
+	      list.innerHTML = `<div class="text-neutral-400">Loading…</div>`;
 
-      refresh();
-      setInterval(refresh, 2500);
-    </script>
+	      const r = await fetch(`/api/requests?limit=10&t=${Date.now()}`, {
+		cache: "no-store",
+	      });
+
+	      if (!r.ok) {
+		const txt = await r.text().catch(() => "");
+		list.innerHTML = `<div class="text-red-300 text-sm">
+		  /api/requests failed (${r.status})<pre class="whitespace-pre-wrap">${txt}</pre>
+		</div>`;
+		return;
+	      }
+
+	      const data = await r.json();
+	      const rows = data.results || [];
+
+	      if (rows.length === 0) {
+		list.innerHTML = `<div class="text-neutral-400">No requests yet.</div>`;
+		return;
+	      }
+
+	      list.innerHTML = rows.map((row, i) => `
+		<div class="rounded-2xl bg-neutral-900 ring-1 ring-neutral-800 p-5 flex items-center justify-between">
+		  <div>
+		    <div class="text-sm text-neutral-400">#${i + 1}</div>
+		    <div class="text-2xl font-bold">${escapeHtml(row.track_name)}</div>
+		    <div class="text-lg text-neutral-300">${escapeHtml(row.artist_name)}</div>
+		  </div>
+		  <div class="text-4xl font-black">${row.votes}</div>
+		</div>
+	      `).join("");
+	    } catch (e) {
+	      console.error(e);
+	      list.innerHTML = `<div class="text-red-300 text-sm">Refresh crashed: ${escapeHtml(e?.message || e)}</div>`;
+	    }
+	  }
+
+	  function escapeHtml(s) {
+	    return String(s).replace(/[&<>"']/g, (c) => ({
+	      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+	    }[c]));
+	  }
+
+	  refresh();
+	  setInterval(refresh, 2500);
+	</script>
   </body>
 </html>
 
