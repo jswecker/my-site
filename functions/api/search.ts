@@ -89,4 +89,3 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
 };
-
