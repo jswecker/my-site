@@ -59,14 +59,17 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     }
 
     return new Response(
-      JSON.stringify({
-        error: "itunes_failed",
-        status: r.status,
-        statusText: r.statusText,
-        sample: text.slice(0, 200),
-      }),
-      { status: 502, headers: BASE_HEADERS }
+      `V4_ITUNES_FAIL status=${r.status} ${r.statusText}`,
+      {
+        status: 502,
+        headers: {
+          "Content-Type": "text/plain",
+          "Cache-Control": "no-store",
+          "X-Search-Version": "v4",
+        },
+      }
     );
+
   }
 
   const data = await r.json();
