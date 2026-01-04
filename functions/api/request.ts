@@ -20,7 +20,6 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async ({ env, re
   const trackTimeMs = body?.trackTimeMillis ?? null;
   const requestedBy = body?.requestedBy ?? "";
 
-  // One row per track_id; requesting again increments request_count
   await env.DB.prepare(
     `
     INSERT INTO requests (
@@ -42,7 +41,6 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async ({ env, re
       album_name = excluded.album_name,
       artwork_url = excluded.artwork_url,
       track_time_ms = excluded.track_time_ms,
-      -- optionally keep last requester (or leave as-is)
       requested_by = excluded.requested_by,
       updated_at = datetime('now')
     `
