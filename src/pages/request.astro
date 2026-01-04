@@ -39,35 +39,85 @@ const title = "Party Jukebox — Request";
       const saveVoted = (set) => localStorage.setItem(votedKey, JSON.stringify([...set]));
 
       async function search() {
-        const q = $("q").value.trim();
-        if (q.length < 3) { $("results").innerHTML = ""; return; }
+	  const q = $("q").value.trim();
+	  if (q.length < 3) { $("results").innerHTML = ""; return; }
 
-        $("results").innerHTML = `<div class="text-neutral-400 text-sm">Searching…</div>`;
-        const r = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
-        const data = await r.json();
+	  $("results").innerHTML = `<div class="text-neutral-400 text-sm">Searching…</div>`;
 
-        $("results").innerHTML = (data.results || []).map(t => `
-          <button class="w-full text-left rounded-lg bg-neutral-900 ring-1 ring-neutral-800 p-3 hover:bg-neutral-800"
-                  data-track='${JSON.stringify(t).replaceAll("'", "&apos;")}'>
-            <div class="font-semibold">${t.trackName}</div>
-            <div class="text-sm text-neutral-300">${t.artistName}${t.collectionName ? " • " + t.collectionName : ""}</div>
-          </button>
-        `).join("");
+	  try {
+	    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=10`;
+	    const r = await fetch(url, { mode: "cors" });
 
-        [...$("results").querySelectorAll("button[data-track]")].forEach(btn => {
-          btn.addEventListener("click", async () => {
-            const track = JSON.parse(btn.getAttribute("data-track"));
-            const requestedBy = ""; // optional: prompt for name
-            await fetch("/api/request", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ ...track, requestedBy })
-            });
-            $("results").innerHTML = `<div class="text-green-300 text-sm">Requested: ${track.trackName} — ${track.artistName}</div>`;
-            await refreshRequests();
-          });
-        });
-      }
+	    if (!r.ok) {
+	      $("results").innerHTML = `<div class="text-red-300 text-sm">Search failed (${r.status}). Try again.</div>`;
+	      return;
+	    }
+
+	    const data = await r.json();
+
+	    const results = (data.results ?? []).map(t => ({
+	      trackId: t.trackId,
+	      trackName: t.trackName,
+	      artistName: t.artistName,
+	      collectionName: t.collectionName,
+	      artworkUrl100: t.artworkUrl100,
+	      trackTimeMillis: t.trackTimeMillis,
+	    }));
+
+	    if (results.length === 0) {
+	      $("results").innerHTML = `<div class="text-neutral-400 text-sm">No results.</div>`;
+	      return;
+	    }
+
+	    // Render WITHOUT putting raw JSON into HTML attributes (safer)
+	    $("results").innerHTML = results.map((t, i) => `
+	      <button class="w-full text-left rounded-lg bg-neutral-900 ring-1 ring-neutral-800 p-3 hover:bg-neutral-800"
+		      data-idx="${i}">
+		<div class="font-semibold">${escapeHtml(t.trackName)}</div>
+		<div class="text-sm text-neutral-300">${escapeHtml(t.artistName)}${t.collectionName ? " • " + escapeHtml(t.collectionName) : ""}</div>
+	      </button>
+	    `).join("");
+
+	    [...$("results").querySelectorAll("button[data-idx]")].forEach(btn => {
+	      btn.addEventListener("click", async () => {
+		const track = results[Number(btn.getAttribute("data-idx"))];
+		$("results").innerHTML = `<div class="text-neutral-400 text-sm">Submitting…</div>`;
+
+		const requestedBy = ""; // optional: prompt for name
+		const resp = await fetch("/api/request", {
+		  method: "POST",
+		  headers: { "Content-Type": "application/json" },
+		  body: JSON.stringify({ ...track, requestedBy })
+		});
+
+		if (!resp.ok) {
+		  const txt = await resp.text().catch(() => "");
+		  $("results").innerHTML = `<div class="text-red-300 text-sm">Request failed. ${escapeHtml(txt)}</div>`;
+		  return;
+		}
+
+		$("results").innerHTML = `<div class="text-green-300 text-sm">Requested: ${escapeHtml(track.trackName)} — ${escapeHtml(track.artistName)}</div>`;
+		await refreshRequests();
+	      });
+	    });
+
+	  } catch (err) {
+	    console.error(err);
+	    $("results").innerHTML = `
+	      <div class="text-red-300 text-sm">
+		Search blocked (CORS/network). If this keeps happening, switch to the Deezer fallback.
+	      </div>
+	    `;
+	  }
+	}
+
+// Simple HTML escape (prevents weird rendering / injection)
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
 
       async function refreshRequests() {
         const r = await fetch("/api/requests?limit=50");
