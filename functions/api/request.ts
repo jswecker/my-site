@@ -5,18 +5,19 @@ function normalizeRequestPayload(body: any) {
   const trackId =
     body?.trackId ??
     body?.track_id ??
-    body?.id ?? // common: spotify track id is sent as `id`
+    body?.id ??
     null;
 
   const title =
     body?.title ??
-    body?.name ?? // common: spotify track name is `name`
+    body?.trackName ??   // ✅ iTunes
+    body?.name ??
     null;
 
-  // handle artist passed as string OR as spotify array
   const artist =
     body?.artist ??
-    body?.artistName ??
+    body?.artistName ??  // ✅ iTunes
+    body?.artistNameString ??
     (Array.isArray(body?.artists)
       ? body.artists.map((a: any) => a?.name).filter(Boolean).join(", ")
       : null);
@@ -24,6 +25,7 @@ function normalizeRequestPayload(body: any) {
   const albumArt =
     body?.albumArt ??
     body?.album_art ??
+    body?.artworkUrl100 ?? // ✅ iTunes
     body?.image ??
     (Array.isArray(body?.images) ? body.images?.[0]?.url : null) ??
     null;
@@ -35,7 +37,7 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async ({ env, re
   const body = await request.json().catch(() => null);
   const { trackId, title, artist, albumArt } = normalizeRequestPayload(body);
 
-  if (!trackId || !title || !artist) {
+  if (trackId == null || !title || !artist) {
     return new Response(
       JSON.stringify({ ok: false, error: "Missing trackId/title/artist", got: body }),
       { status: 400, headers: { "content-type": "application/json" } }
