@@ -1,11 +1,94 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const title = "Party Jukebox";
 ---
 
-<Layout>
-	<Welcome />
-</Layout>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <style>
+      :root { color-scheme: dark; }
+    </style>
+  </head>
+
+  <body class="min-h-screen text-neutral-100 bg-[#0b0f0e]">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 -z-10">
+      <div class="absolute inset-0 bg-[#0b0f0e]"></div>
+      <div
+        class="absolute -top-48 left-1/2 h-[640px] w-[1100px] -translate-x-1/2 rounded-full blur-3xl opacity-35"
+        style="background: radial-gradient(circle at 50% 50%, rgba(29,185,84,0.45), rgba(0,0,0,0));"
+      ></div>
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/70"></div>
+    </div>
+
+    <main class="mx-auto max-w-3xl px-6 pb-20 pt-12">
+      <header>
+        <div class="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 ring-1 ring-white/10">
+          <span class="inline-block h-2 w-2 rounded-full bg-[#1DB954]"></span>
+          <span class="text-xs font-semibold tracking-wide text-neutral-200">PARTY JUKEBOX</span>
+        </div>
+
+        <h1 class="mt-5 text-4xl sm:text-5xl font-extrabold tracking-tight">
+          Let the party pick the music.
+        </h1>
+
+        <p class="mt-4 text-base sm:text-lg text-neutral-300">
+          Guests request songs from their phones and vote them up.
+          Put <span class="font-semibold text-neutral-100">/screen</span> on a TV for the live leaderboard.
+        </p>
+      </header>
+
+      <!-- CTAs -->
+      <section class="mt-10 grid gap-4 sm:grid-cols-2">
+        <a
+          href="/request"
+          class="group rounded-3xl bg-white/5 ring-1 ring-white/10 backdrop-blur p-6 hover:bg-white/10 transition"
+        >
+          <div class="flex items-center justify-between">
+            <div class="text-sm font-semibold text-neutral-300">For guests</div>
+            <div class="rounded-full bg-[#1DB954] px-4 py-2 text-sm font-extrabold text-black group-hover:brightness-110">
+              Request →
+            </div>
+          </div>
+          <div class="mt-4 text-2xl font-extrabold">Request a song</div>
+          <div class="mt-2 text-sm text-neutral-300">
+            Search by song or artist, submit a request, and vote.
+          </div>
+        </a>
+
+        <a
+          href="/screen"
+          class="group rounded-3xl bg-white/5 ring-1 ring-white/10 backdrop-blur p-6 hover:bg-white/10 transition"
+        >
+          <div class="flex items-center justify-between">
+            <div class="text-sm font-semibold text-neutral-300">For the TV</div>
+            <div class="rounded-full bg-[#1DB954] px-4 py-2 text-sm font-extrabold text-black group-hover:brightness-110">
+              Screen →
+            </div>
+          </div>
+          <div class="mt-4 text-2xl font-extrabold">Live leaderboard</div>
+          <div class="mt-2 text-sm text-neutral-300">
+            Auto-updating top requests sorted by votes.
+          </div>
+        </a>
+      </section>
+
+      <!-- How it works -->
+      <section class="mt-10 rounded-3xl bg-black/30 ring-1 ring-white/10 p-6">
+        <h2 class="text-lg font-extrabold">How it works</h2>
+        <ol class="mt-3 space-y-2 text-sm text-neutral-300">
+          <li><span class="text-neutral-100 font-semibold">1)</span> Guests go to <span class="text-neutral-100 font-semibold">/request</span>.</li>
+          <li><span class="text-neutral-100 font-semibold">2)</span> Requesting a song automatically adds a vote.</li>
+          <li><span class="text-neutral-100 font-semibold">3)</span> Put <span class="text-neutral-100 font-semibold">/screen</span> on a TV.</li>
+        </ol>
+      </section>
+
+      <footer class="mt-10 text-xs text-neutral-500">
+        Tip: Share the <span class="text-neutral-200 font-semibold">/request</span> link with guests.
+      </footer>
+    </main>
+  </body>
+</html>
+
