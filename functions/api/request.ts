@@ -1,38 +1,50 @@
 // functions/api/request.ts
 import type { PagesFunction } from "@cloudflare/workers-types";
 
-export const onRequestPost: PagesFunction<{
-  DB: D1Database;
-}> = async (context) => {
-  const { DB } = context.env;
+function normalizeRequestPayload(body: any) {
+  const trackId =
+    body?.trackId ??
+    body?.track_id ??
+    body?.id ?? // common: spotify track id is sent as `id`
+    null;
 
-  const body = await context.request.json().catch(() => null);
-  if (!body?.trackId || !body?.title || !body?.artist) {
-    return new Response("Missing trackId/title/artist", { status: 400 });
+  const title =
+    body?.title ??
+    body?.name ?? // common: spotify track name is `name`
+    null;
+
+  // handle artist passed as string OR as spotify array
+  const artist =
+    body?.artist ??
+    body?.artistName ??
+    (Array.isArray(body?.artists)
+      ? body.artists.map((a: any) => a?.name).filter(Boolean).join(", ")
+      : null);
+
+  const albumArt =
+    body?.albumArt ??
+    body?.album_art ??
+    body?.image ??
+    (Array.isArray(body?.images) ? body.images?.[0]?.url : null) ??
+    null;
+
+  return { trackId, title, artist, albumArt };
+}
+
+export const onRequestPost: PagesFunction<{ DB: D1Database }> = async ({ env, request }) => {
+  const body = await request.json().catch(() => null);
+  const { trackId, title, artist, albumArt } = normalizeRequestPayload(body);
+
+  if (!trackId || !title || !artist) {
+    return new Response(
+      JSON.stringify({ ok: false, error: "Missing trackId/title/artist", got: body }),
+      { status: 400, headers: { "content-type": "application/json" } }
+    );
   }
 
-  const trackId = String(body.trackId);
-  const title = String(body.title);
-  const artist = String(body.artist);
-  const albumArt = body.albumArt ? String(body.albumArt) : null;
-
-  // UPSERT: if track_id exists, increment requested_count (and keep metadata fresh)
-  await DB.prepare(
-    `
-    INSERT INTO requests (track_id, title, artist, album_art, requested_count, votes, created_at, updated_at)
-    VALUES (?, ?, ?, ?, 1, 0, datetime('now'), datetime('now'))
-    ON CONFLICT(track_id) DO UPDATE SET
-      requested_count = requested_count + 1,
-      title = excluded.title,
-      artist = excluded.artist,
-      album_art = COALESCE(excluded.album_art, album_art),
-      updated_at = datetime('now')
-    `
-  )
-    .bind(trackId, title, artist, albumArt)
-    .run();
-
-  return new Response(JSON.stringify({ ok: true }), {
+  // NOTE: DB part will be fixed in Fix 2 (schema-safe)
+  // For now just return ok so you can verify payload is good:
+  return new Response(JSON.stringify({ ok: true, trackId, title, artist, albumArt }), {
     headers: { "content-type": "application/json" },
   });
 };
