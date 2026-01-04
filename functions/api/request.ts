@@ -38,7 +38,7 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async ({ env, re
       .bind(ip)
       .first<{ last_request_ms: number }>();
 
-    if (row && now - row.last_request_ms < 60_000) {
+    if (row && now - row.last_request_ms < 1_000) {
       const waitMs = 60_000 - (now - row.last_request_ms);
       return new Response(
         JSON.stringify({ ok: false, error: "Rate limited", retryAfterMs: waitMs }),
