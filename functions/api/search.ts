@@ -21,14 +21,49 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     });
   }
 
-  // iTunes Search API is ~20 calls/min (subject to change) :contentReference[oaicite:4]{index=4}
   const it = new URL("https://itunes.apple.com/search");
   it.searchParams.set("term", q);
   it.searchParams.set("entity", "song");
   it.searchParams.set("limit", "10");
 
-  const r = await fetch(it.toString(), { headers: { "User-Agent": "party-jukebox/1.0" } });
-  if (!r.ok) return Response.json({ error: "itunes_failed" }, { status: 502 });
+  // More browser-like headers can help reduce edge/CDN blocking.
+  const itunesHeaders: Record<string, string> = {
+    Accept: "application/json,text/javascript,*/*;q=0.1",
+    "Accept-Language": "en-US,en;q=0.9",
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+  };
+
+  const fetchItunes = () => fetch(it.toString(), { headers: itunesHeaders });
+
+  // Try once, then retry once (helps transient failures / rate limits).
+  let r = await fetchItunes();
+  if (!r.ok) {
+    await new Promise((res) => setTimeout(res, 200));
+    r = await fetchItunes();
+  }
+
+  if (!r.ok) {
+    const text = await r.text().catch(() => "");
+    console.log("itunes_failed", r.status, r.statusText, text.slice(0, 200));
+
+    // Party-friendly: if we have an older cached result, serve it rather than erroring.
+    if (cached) {
+      return new Response(cached.response_json, {
+        headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+      });
+    }
+
+    return new Response(
+      JSON.stringify({
+        error: "itunes_failed",
+        status: r.status,
+        statusText: r.statusText,
+        sample: text.slice(0, 200),
+      }),
+      { status: 502, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } }
+    );
+  }
 
   const data = await r.json();
   const results = (data.results ?? []).map((t: any) => ({
@@ -41,10 +76,14 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   }));
 
   const body = JSON.stringify({ results });
-  await env.DB
-    .prepare("INSERT OR REPLACE INTO search_cache (q, fetched_at, response_json) VALUES (?1, ?2, ?3)")
-    .bind(q, now, body)
-    .run();
+
+  // Don't poison cache with empty lists.
+  if (results.length > 0) {
+    await env.DB
+      .prepare("INSERT OR REPLACE INTO search_cache (q, fetched_at, response_json) VALUES (?1, ?2, ?3)")
+      .bind(q, now, body)
+      .run();
+  }
 
   return new Response(body, {
     headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
