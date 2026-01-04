@@ -6,64 +6,145 @@ const title = "Party Jukebox — Screen";
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
+    <style>
+      :root { color-scheme: dark; }
+    </style>
   </head>
-  <body class="min-h-screen bg-neutral-950 text-neutral-100">
-    <main class="mx-auto max-w-3xl p-6">
-      <h1 class="text-3xl font-bold">Top Requests</h1>
-      <p class="text-neutral-300 mt-1">Auto-updates every ~2s</p>
-      <div id="list" class="mt-6 space-y-3"></div>
+
+  <body class="min-h-screen text-neutral-100 bg-[#0b0f0e]">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 -z-10">
+      <div class="absolute inset-0 bg-[#0b0f0e]"></div>
+      <div
+        class="absolute -top-48 left-1/2 h-[640px] w-[1100px] -translate-x-1/2 rounded-full blur-3xl opacity-35"
+        style="background: radial-gradient(circle at 50% 50%, rgba(29,185,84,0.45), rgba(0,0,0,0));"
+      ></div>
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/70"></div>
+    </div>
+
+    <main class="mx-auto max-w-5xl px-6 pb-16 pt-10">
+      <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div class="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 ring-1 ring-white/10">
+            <span class="inline-block h-2 w-2 rounded-full bg-[#1DB954]"></span>
+            <span class="text-xs font-semibold tracking-wide text-neutral-200">TOP REQUESTS</span>
+          </div>
+
+          <h1 class="mt-4 text-4xl font-extrabold tracking-tight">Party Jukebox</h1>
+          <p class="mt-2 text-sm text-neutral-300">Auto-updates every ~2.5s</p>
+        </div>
+
+        <div class="flex gap-2">
+          <a
+            href="/"
+            class="rounded-full bg-white/5 px-4 py-2 text-sm font-semibold text-neutral-200 ring-1 ring-white/10 hover:bg-white/10"
+          >
+            Home
+          </a>
+
+          <a
+            href="/request"
+            class="rounded-full bg-[#1DB954] px-5 py-3 text-sm font-extrabold text-black hover:brightness-110 active:brightness-95"
+          >
+            Request a song
+          </a>
+        </div>
+      </header>
+
+      <div id="list" class="mt-8 grid gap-4"></div>
     </main>
 
-	<script type="module">
-	  const list = document.getElementById("list");
+    <script type="module">
+      const list = document.getElementById("list");
 
-	  async function refresh() {
-	    try {
-	      list.innerHTML = `<div class="text-neutral-400">Loading…</div>`;
+      function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, (c) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        }[c]));
+      }
 
-	      const r = await fetch("/api/requests?limit=10&sort=recent", { cache: "no-store" });
+      async function refresh() {
+        try {
+          if (!list.hasChildNodes()) {
+            list.innerHTML = `
+              <div class="rounded-3xl bg-white/5 p-6 ring-1 ring-white/10 text-neutral-300">
+                Loading…
+              </div>
+            `;
+          }
 
-	      if (!r.ok) {
-		const txt = await r.text().catch(() => "");
-		list.innerHTML = `<div class="text-red-300 text-sm">
-		  /api/requests failed (${r.status})<pre class="whitespace-pre-wrap">${txt}</pre>
-		</div>`;
-		return;
-	      }
+          const r = await fetch("/api/requests?limit=10&sort=recent", { cache: "no-store" });
 
-	      const data = await r.json();
-	      const rows = data.results || [];
+          if (!r.ok) {
+            const txt = await r.text().catch(() => "");
+            list.innerHTML = `
+              <div class="rounded-3xl bg-red-500/10 p-6 ring-1 ring-red-500/20 text-sm text-red-200">
+                /api/requests failed (${r.status})
+                <pre class="mt-3 whitespace-pre-wrap text-xs text-red-200/80">${escapeHtml(txt)}</pre>
+              </div>
+            `;
+            return;
+          }
 
-	      if (rows.length === 0) {
-		list.innerHTML = `<div class="text-neutral-400">No requests yet.</div>`;
-		return;
-	      }
+          const data = await r.json();
+          const rows = data.results || [];
 
-	      list.innerHTML = rows.map((row, i) => `
-		<div class="rounded-2xl bg-neutral-900 ring-1 ring-neutral-800 p-5 flex items-center justify-between">
-		  <div>
-		    <div class="text-sm text-neutral-400">#${i + 1}</div>
-		    <div class="text-2xl font-bold">${escapeHtml(row.track_name)}</div>
-		    <div class="text-lg text-neutral-300">${escapeHtml(row.artist_name)}</div>
-		  </div>
-		  <div class="text-4xl font-black">${row.votes}</div>
-		</div>
-	      `).join("");
-	    } catch (e) {
-	      console.error(e);
-	      list.innerHTML = `<div class="text-red-300 text-sm">Refresh crashed: ${escapeHtml(e?.message || e)}</div>`;
-	    }
-	  }
+          if (rows.length === 0) {
+            list.innerHTML = `
+              <div class="rounded-3xl bg-white/5 p-6 ring-1 ring-white/10 text-neutral-300">
+                No requests yet.
+              </div>
+            `;
+            return;
+          }
 
-	  function escapeHtml(s) {
-	    return String(s).replace(/[&<>"']/g, (c) => ({
-	      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-	    }[c]));
-	  }
+          list.innerHTML = rows.map((row, i) => {
+            const art = row.artwork_url || "";
+            return `
+              <div class="rounded-3xl bg-white/5 ring-1 ring-white/10 backdrop-blur px-6 py-5 flex items-center justify-between gap-6">
+                <div class="flex items-center gap-4 min-w-0">
+                  <div class="shrink-0 w-12 text-center">
+                    <div class="text-xs text-neutral-400">#${i + 1}</div>
+                    <div class="mt-1 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-black/30 ring-1 ring-white/10 text-lg font-extrabold">
+                      ${i + 1}
+                    </div>
+                  </div>
 
-	  refresh();
-	  setInterval(refresh, 2500);
-	</script>
+                  <img
+                    src="${escapeHtml(art)}"
+                    alt=""
+                    class="h-14 w-14 rounded-lg bg-white/5 ring-1 ring-white/10 object-cover"
+                    loading="lazy"
+                  />
+
+                  <div class="min-w-0">
+                    <div class="text-2xl font-extrabold truncate">${escapeHtml(row.track_name)}</div>
+                    <div class="text-base text-neutral-300 truncate">
+                      ${escapeHtml(row.artist_name)}${row.album_name ? " • " + escapeHtml(row.album_name) : ""}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="shrink-0 rounded-full bg-black/30 px-6 py-3 ring-1 ring-white/10 text-center">
+                  <div class="text-[10px] uppercase tracking-wider text-neutral-400">votes</div>
+                  <div class="text-4xl font-black leading-none">${row.votes}</div>
+                </div>
+              </div>
+            `;
+          }).join("");
+        } catch (e) {
+          console.error(e);
+          list.innerHTML = `
+            <div class="rounded-3xl bg-red-500/10 p-6 ring-1 ring-red-500/20 text-sm text-red-200">
+              Refresh crashed: ${escapeHtml(e?.message || e)}
+            </div>
+          `;
+        }
+      }
+
+      refresh();
+      setInterval(refresh, 2500);
+    </script>
   </body>
 </html>
 

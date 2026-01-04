@@ -6,8 +6,6 @@ const title = "Party Jukebox — Request";
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
-
-    <!-- Optional: nicer system font stack -->
     <style>
       :root { color-scheme: dark; }
     </style>
@@ -17,20 +15,23 @@ const title = "Party Jukebox — Request";
     <!-- Spotify-ish backdrop -->
     <div class="fixed inset-0 -z-10">
       <div class="absolute inset-0 bg-[#0b0f0e]"></div>
-      <div class="absolute -top-40 left-1/2 h-[520px] w-[920px] -translate-x-1/2 rounded-full blur-3xl opacity-30"
-           style="background: radial-gradient(circle at 50% 50%, rgba(29,185,84,0.35), rgba(0,0,0,0));"></div>
+      <div
+        class="absolute -top-40 left-1/2 h-[520px] w-[920px] -translate-x-1/2 rounded-full blur-3xl opacity-30"
+        style="background: radial-gradient(circle at 50% 50%, rgba(29,185,84,0.35), rgba(0,0,0,0));"
+      ></div>
       <div class="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/60"></div>
     </div>
 
     <main class="mx-auto max-w-2xl px-4 pb-16 pt-8">
       <!-- Header -->
-      <header class="flex items-start justify-between gap-4">
+      <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div class="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 ring-1 ring-white/10">
             <span class="inline-block h-2 w-2 rounded-full bg-[#1DB954]"></span>
             <span class="text-xs font-semibold tracking-wide text-neutral-200">PARTY JUKEBOX</span>
           </div>
-          <h1 class="mt-4 text-3xl font-extrabold tracking-tight">
+
+          <h1 class="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight">
             Request a song
           </h1>
           <p class="mt-2 text-sm text-neutral-300">
@@ -38,42 +39,67 @@ const title = "Party Jukebox — Request";
           </p>
         </div>
 
-        <a href="/screen"
-           class="shrink-0 rounded-full bg-white/5 px-4 py-2 text-sm font-semibold text-neutral-200 ring-1 ring-white/10 hover:bg-white/10">
-          View Screen →
-        </a>
+        <div class="flex gap-2">
+          <a
+            href="/"
+            class="rounded-full bg-white/5 px-4 py-2 text-sm font-semibold text-neutral-200 ring-1 ring-white/10 hover:bg-white/10"
+          >
+            Home
+          </a>
+
+          <a
+            href="/screen"
+            class="rounded-full bg-[#1DB954] px-4 py-2 text-sm font-extrabold text-black hover:brightness-110 active:brightness-95"
+          >
+            View Screen →
+          </a>
+        </div>
       </header>
 
       <!-- Toast / status -->
       <div id="toast" class="mt-6 hidden rounded-2xl p-4 text-sm ring-1"></div>
 
       <!-- Search card -->
-      <section class="mt-6 rounded-3xl bg-white/5 p-5 ring-1 ring-white/10 backdrop-blur">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <section class="mt-6 rounded-3xl bg-white/5 p-6 ring-1 ring-white/10 backdrop-blur">
+        <div class="flex items-end justify-between gap-4">
           <div>
             <label for="q" class="block text-sm font-semibold text-neutral-200">Search</label>
             <p class="mt-1 text-xs text-neutral-400">Type a song or artist (min 3 chars)</p>
           </div>
-          <div class="text-xs text-neutral-400">Powered by iTunes Search</div>
+          <div class="text-xs text-neutral-500">Powered by iTunes Search</div>
         </div>
 
-        <div class="mt-4 flex gap-3">
+        <!-- BIG search row -->
+        <div class="mt-4 flex flex-col sm:flex-row gap-3">
           <div class="relative w-full">
-            <span class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500">⌕</span>
+            <span class="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-neutral-500 text-lg">⌕</span>
             <input
               id="q"
-              class="w-full rounded-full bg-black/30 py-3 pl-10 pr-4 text-neutral-100 outline-none ring-1 ring-white/10 placeholder:text-neutral-500 focus:ring-[#1DB954]/50"
-              placeholder="Try: Taylor Swift, Drake, Journey…"
+              class="w-full rounded-full bg-black/30 py-4 pl-12 pr-5 text-base sm:text-lg text-neutral-100 outline-none
+                     ring-1 ring-white/10 placeholder:text-neutral-500 focus:ring-[#1DB954]/55"
+              placeholder="Search songs, artists…"
               autocomplete="off"
             />
           </div>
 
-          <button
-            id="btnSearch"
-            class="rounded-full bg-[#1DB954] px-5 py-3 text-sm font-extrabold text-black shadow-[0_0_0_1px_rgba(0,0,0,0.4)] hover:brightness-110 active:brightness-95"
-          >
-            Search
-          </button>
+          <div class="flex gap-3">
+            <button
+              id="btnSearch"
+              class="rounded-full bg-[#1DB954] px-8 py-4 text-base sm:text-lg font-extrabold text-black
+                     hover:brightness-110 active:brightness-95"
+            >
+              Search
+            </button>
+
+            <button
+              id="btnRefresh"
+              type="button"
+              class="rounded-full bg-white/10 px-6 py-4 text-base sm:text-lg font-extrabold text-neutral-100
+                     ring-1 ring-white/15 hover:bg-white/15 active:bg-white/10"
+            >
+              ↻ Refresh
+            </button>
+          </div>
         </div>
 
         <div id="results" class="mt-5 space-y-2"></div>
@@ -102,14 +128,13 @@ const title = "Party Jukebox — Request";
         t.classList.remove("hidden");
         t.innerHTML = html;
 
-        // Kind styles
         t.className = "mt-6 rounded-2xl p-4 text-sm ring-1";
         if (kind === "ok") t.classList.add("bg-[#1DB954]/10", "ring-[#1DB954]/30", "text-[#baf7cf]");
         else if (kind === "warn") t.classList.add("bg-yellow-400/10", "ring-yellow-400/30", "text-yellow-200");
         else t.classList.add("bg-red-500/10", "ring-red-500/30", "text-red-200");
       }
 
-      // Simple HTML escape (prevents weird rendering / injection)
+      // Simple HTML escape
       function escapeHtml(s) {
         return String(s).replace(/[&<>"']/g, (c) => ({
           "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -135,13 +160,13 @@ const title = "Party Jukebox — Request";
         `;
 
         try {
-          const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=10`;
+          const url = \`https://itunes.apple.com/search?term=\${encodeURIComponent(q)}&entity=song&limit=10\`;
           const r = await fetch(url, { mode: "cors" });
 
           if (!r.ok) {
             $("results").innerHTML = `
               <div class="rounded-2xl bg-red-500/10 p-4 ring-1 ring-red-500/20 text-sm text-red-200">
-                Search failed (${r.status}). Try again.
+                Search failed (\${r.status}). Try again.
               </div>`;
             return;
           }
@@ -165,19 +190,22 @@ const title = "Party Jukebox — Request";
             return;
           }
 
+          // Spotify-ish media rows for results
           $("results").innerHTML = results.map((t, i) => `
             <button
-              class="group w-full text-left rounded-2xl bg-black/30 ring-1 ring-white/10 p-3 hover:bg-white/5 transition flex items-center gap-3"
+              class="group w-full text-left rounded-2xl bg-black/30 ring-1 ring-white/10 px-4 py-3 hover:bg-white/5 transition flex items-center gap-3"
               data-idx="${i}"
             >
               <img
                 src="${escapeHtml(t.artworkUrl100 || "")}"
                 alt=""
-                class="h-12 w-12 rounded-xl ring-1 ring-white/10 bg-white/5 object-cover"
+                class="h-12 w-12 rounded-lg ring-1 ring-white/10 bg-white/5 object-cover"
                 loading="lazy"
               />
               <div class="min-w-0 flex-1">
-                <div class="font-extrabold text-neutral-100 truncate group-hover:text-white">${escapeHtml(t.trackName)}</div>
+                <div class="font-extrabold text-neutral-100 truncate group-hover:text-white">
+                  ${escapeHtml(t.trackName)}
+                </div>
                 <div class="text-sm text-neutral-300 truncate">
                   ${escapeHtml(t.artistName)}${t.collectionName ? " • " + escapeHtml(t.collectionName) : ""}
                 </div>
@@ -202,7 +230,7 @@ const title = "Party Jukebox — Request";
                 </div>
               `;
 
-              const requestedBy = ""; // optional: prompt for name
+              const requestedBy = ""; // optional
 
               const resp = await fetch("/api/request", {
                 method: "POST",
@@ -211,24 +239,22 @@ const title = "Party Jukebox — Request";
               });
 
               if (!resp.ok) {
-                // try parse JSON for rate-limit
-                let msg = "";
+                // Try JSON (rate limit)
                 try {
                   const j = await resp.json();
                   if (resp.status === 429 && j?.retryAfterMs != null) {
                     const secs = Math.ceil(j.retryAfterMs / 1000);
-                    msg = `Rate limited — try again in <b>${secs}s</b>.`;
-                    showToast("warn", msg);
+                    showToast("warn", `Rate limited — try again in <b>${secs}s</b>.`);
                     $("results").innerHTML = "";
                     return;
                   }
-                  msg = escapeHtml(j?.error || JSON.stringify(j));
+                  showToast("err", `Request failed. ${escapeHtml(j?.error || JSON.stringify(j))}`);
+                  return;
                 } catch {
                   const txt = await resp.text().catch(() => "");
-                  msg = escapeHtml(txt);
+                  showToast("err", `Request failed. ${escapeHtml(txt)}`);
+                  return;
                 }
-                showToast("err", `Request failed. ${msg}`);
-                return;
               }
 
               showToast("ok", `Requested: <b>${escapeHtml(track.trackName)}</b> — ${escapeHtml(track.artistName)}`);
@@ -256,13 +282,19 @@ const title = "Party Jukebox — Request";
           const spotifySearch = `https://open.spotify.com/search/${encodeURIComponent(row.track_name + " " + row.artist_name)}`;
           const disabled = voted.has(row.id);
           const art = row.artwork_url || "";
+
           return `
-            <div class="rounded-3xl bg-white/5 ring-1 ring-white/10 p-4 backdrop-blur flex items-center justify-between gap-4">
-              <div class="flex items-center gap-4 min-w-0">
-                <img src="${escapeHtml(art)}" alt=""
-                     class="h-14 w-14 rounded-2xl ring-1 ring-white/10 bg-white/5 object-cover" loading="lazy" />
+            <div class="rounded-2xl bg-white/5 ring-1 ring-white/10 backdrop-blur px-4 py-3 flex items-center justify-between gap-4">
+              <!-- Media row (like Spotify) -->
+              <div class="flex items-center gap-3 min-w-0">
+                <img
+                  src="${escapeHtml(art)}"
+                  alt=""
+                  class="h-12 w-12 rounded-lg bg-white/5 ring-1 ring-white/10 object-cover"
+                  loading="lazy"
+                />
                 <div class="min-w-0">
-                  <div class="font-extrabold truncate">${escapeHtml(row.track_name)}</div>
+                  <div class="font-extrabold text-neutral-100 truncate">${escapeHtml(row.track_name)}</div>
                   <div class="text-sm text-neutral-300 truncate">
                     ${escapeHtml(row.artist_name)}${row.album_name ? " • " + escapeHtml(row.album_name) : ""}
                   </div>
@@ -273,10 +305,11 @@ const title = "Party Jukebox — Request";
                 </div>
               </div>
 
+              <!-- Votes + button -->
               <div class="flex items-center gap-3 shrink-0">
-                <div class="flex items-center gap-2 rounded-full bg-black/30 px-3 py-2 ring-1 ring-white/10">
-                  <span class="text-xs text-neutral-400">votes</span>
-                  <span class="text-sm font-extrabold text-white">${row.votes}</span>
+                <div class="rounded-full bg-black/30 px-3 py-2 ring-1 ring-white/10 text-center">
+                  <div class="text-[10px] uppercase tracking-wider text-neutral-400">votes</div>
+                  <div class="text-lg font-black leading-none">${row.votes}</div>
                 </div>
 
                 <button
@@ -310,7 +343,7 @@ const title = "Party Jukebox — Request";
             });
 
             if (!resp.ok) {
-              // revert voted state if vote failed
+              // revert vote locally if server failed
               voted.delete(id);
               saveVoted(voted);
               const txt = await resp.text().catch(() => "");
@@ -325,6 +358,11 @@ const title = "Party Jukebox — Request";
 
       $("btnSearch").addEventListener("click", search);
       $("q").addEventListener("keydown", (e) => { if (e.key === "Enter") search(); });
+
+      $("btnRefresh").addEventListener("click", async () => {
+        await refreshRequests();
+        showToast("ok", "Refreshed requests.");
+      });
 
       refreshRequests();
       setInterval(refreshRequests, 10000);
