@@ -1,52 +1,65 @@
 // functions/api/request.ts
 import type { PagesFunction } from "@cloudflare/workers-types";
 
-function normalizeRequestPayload(body: any) {
-  const trackId =
-    body?.trackId ??
-    body?.track_id ??
-    body?.id ??
-    null;
-
-  const title =
-    body?.title ??
-    body?.trackName ??   // ✅ iTunes
-    body?.name ??
-    null;
-
-  const artist =
-    body?.artist ??
-    body?.artistName ??  // ✅ iTunes
-    body?.artistNameString ??
-    (Array.isArray(body?.artists)
-      ? body.artists.map((a: any) => a?.name).filter(Boolean).join(", ")
-      : null);
-
-  const albumArt =
-    body?.albumArt ??
-    body?.album_art ??
-    body?.artworkUrl100 ?? // ✅ iTunes
-    body?.image ??
-    (Array.isArray(body?.images) ? body.images?.[0]?.url : null) ??
-    null;
-
-  return { trackId, title, artist, albumArt };
-}
-
 export const onRequestPost: PagesFunction<{ DB: D1Database }> = async ({ env, request }) => {
   const body = await request.json().catch(() => null);
-  const { trackId, title, artist, albumArt } = normalizeRequestPayload(body);
 
-  if (trackId == null || !title || !artist) {
+  const trackId = body?.trackId;
+  const trackName = body?.trackName;
+  const artistName = body?.artistName;
+
+  if (trackId == null || !trackName || !artistName) {
     return new Response(
-      JSON.stringify({ ok: false, error: "Missing trackId/title/artist", got: body }),
+      JSON.stringify({ ok: false, error: "Missing trackId/trackName/artistName", got: body }),
       { status: 400, headers: { "content-type": "application/json" } }
     );
   }
 
-  // NOTE: DB part will be fixed in Fix 2 (schema-safe)
-  // For now just return ok so you can verify payload is good:
-  return new Response(JSON.stringify({ ok: true, trackId, title, artist, albumArt }), {
+  const albumName = body?.collectionName ?? null;
+  const artworkUrl = body?.artworkUrl100 ?? null;
+  const trackTimeMs = body?.trackTimeMillis ?? null;
+  const requestedBy = body?.requestedBy ?? "";
+
+  // One row per track_id; requesting again increments request_count
+  await env.DB.prepare(
+    `
+    INSERT INTO requests (
+      id, created_at, updated_at,
+      votes, request_count,
+      track_id, track_name, artist_name, album_name, artwork_url, track_time_ms,
+      requested_by
+    )
+    VALUES (
+      ?, datetime('now'), datetime('now'),
+      0, 1,
+      ?, ?, ?, ?, ?, ?,
+      ?
+    )
+    ON CONFLICT(track_id) DO UPDATE SET
+      request_count = request_count + 1,
+      track_name = excluded.track_name,
+      artist_name = excluded.artist_name,
+      album_name = excluded.album_name,
+      artwork_url = excluded.artwork_url,
+      track_time_ms = excluded.track_time_ms,
+      -- optionally keep last requester (or leave as-is)
+      requested_by = excluded.requested_by,
+      updated_at = datetime('now')
+    `
+  )
+    .bind(
+      `track:${String(trackId)}`,
+      Number(trackId),
+      String(trackName),
+      String(artistName),
+      albumName ? String(albumName) : null,
+      artworkUrl ? String(artworkUrl) : null,
+      trackTimeMs != null ? Number(trackTimeMs) : null,
+      String(requestedBy)
+    )
+    .run();
+
+  return new Response(JSON.stringify({ ok: true }), {
     headers: { "content-type": "application/json" },
   });
 };

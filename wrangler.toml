@@ -1,0 +1,7 @@
+name = "party-jukebox"
+compatibility_date = "2026-01-04"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "party_jukebox_db"
+database_id = "25ae327a-b447-4226-b064-26d5dcca421d"
