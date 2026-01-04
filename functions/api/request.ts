@@ -20,42 +20,43 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async ({ env, re
   const trackTimeMs = body?.trackTimeMillis ?? null;
   const requestedBy = body?.requestedBy ?? "";
 
-  await env.DB.prepare(
-    `
-    INSERT INTO requests (
-      id, created_at, updated_at,
-      votes, request_count,
-      track_id, track_name, artist_name, album_name, artwork_url, track_time_ms,
-      requested_by
-    )
-    VALUES (
-      ?, datetime('now'), datetime('now'),
-      0, 1,
-      ?, ?, ?, ?, ?, ?,
-      ?
-    )
-    ON CONFLICT(track_id) DO UPDATE SET
-      request_count = request_count + 1,
-      track_name = excluded.track_name,
-      artist_name = excluded.artist_name,
-      album_name = excluded.album_name,
-      artwork_url = excluded.artwork_url,
-      track_time_ms = excluded.track_time_ms,
-      requested_by = excluded.requested_by,
-      updated_at = datetime('now')
-    `
-  )
-    .bind(
-      `track:${String(trackId)}`,
-      Number(trackId),
-      String(trackName),
-      String(artistName),
-      albumName ? String(albumName) : null,
-      artworkUrl ? String(artworkUrl) : null,
-      trackTimeMs != null ? Number(trackTimeMs) : null,
-      String(requestedBy)
-    )
-    .run();
+	await env.DB.prepare(
+	  `
+	  INSERT INTO requests (
+	    id, created_at, updated_at,
+	    votes, request_count,
+	    track_id, track_name, artist_name, album_name, artwork_url, track_time_ms,
+	    requested_by
+	  )
+	  VALUES (
+	    ?, datetime('now'), datetime('now'),
+	    1, 1,                       -- ✅ NEW: first request starts with 1 vote
+	    ?, ?, ?, ?, ?, ?,
+	    ?
+	  )
+	  ON CONFLICT(track_id) DO UPDATE SET
+	    request_count = request_count + 1,
+	    votes = votes + 1,          -- ✅ NEW: repeat request auto-upvotes
+	    track_name = excluded.track_name,
+	    artist_name = excluded.artist_name,
+	    album_name = excluded.album_name,
+	    artwork_url = excluded.artwork_url,
+	    track_time_ms = excluded.track_time_ms,
+	    requested_by = excluded.requested_by,
+	    updated_at = datetime('now')
+	  `
+	)
+	  .bind(
+	    `track:${String(trackId)}`,
+	    Number(trackId),
+	    String(trackName),
+	    String(artistName),
+	    albumName ? String(albumName) : null,
+	    artworkUrl ? String(artworkUrl) : null,
+	    trackTimeMs != null ? Number(trackTimeMs) : null,
+	    String(requestedBy)
+	  )
+	  .run();
 
   return new Response(JSON.stringify({ ok: true }), {
     headers: { "content-type": "application/json" },
