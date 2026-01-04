@@ -2,6 +2,13 @@ import type { PagesFunction } from "@cloudflare/workers-types";
 
 export const onRequestGet: PagesFunction<{ DB: D1Database }> = async ({ env }) => {
   try {
+    if (!env.DB) {
+      return new Response(JSON.stringify({ ok: false, error: "Missing D1 binding DB" }), {
+        status: 500,
+        headers: { "content-type": "application/json" },
+      });
+    }
+
     const { results } = await env.DB.prepare(
       `
       SELECT
@@ -19,7 +26,10 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async ({ env }) =
       `
     ).all();
 
-    return new Response(JSON.stringify(results ?? []), {
+    const payload = results ?? [];
+
+    // Return an envelope + also keep it easy to inspect
+    return new Response(JSON.stringify({ ok: true, results: payload }), {
       headers: { "content-type": "application/json" },
     });
   } catch (e: any) {
