@@ -39,7 +39,7 @@ const title = "Party Jukebox — Request";
           </p>
         </div>
 
-        <div class="flex gap-2">
+        <div class="flex flex-col gap-2">
           <a
             href="/"
             class="rounded-full bg-white/5 px-4 py-2 text-sm font-semibold text-neutral-200 ring-1 ring-white/10 hover:bg-white/10"
@@ -87,6 +87,7 @@ const title = "Party Jukebox — Request";
               id="btnSearch"
               class="rounded-full bg-[#1DB954] px-8 py-4 text-base sm:text-lg font-extrabold text-black
                      hover:brightness-110 active:brightness-95"
+              type="button"
             >
               Search
             </button>
@@ -123,6 +124,8 @@ const title = "Party Jukebox — Request";
       const getVoted = () => new Set(JSON.parse(localStorage.getItem(votedKey) || "[]"));
       const saveVoted = (set) => localStorage.setItem(votedKey, JSON.stringify([...set]));
 
+      // NOTE: the line above MUST NOT end with a backtick. If you see one, remove it.
+
       function showToast(kind, html) {
         const t = $("toast");
         t.classList.remove("hidden");
@@ -134,7 +137,6 @@ const title = "Party Jukebox — Request";
         else t.classList.add("bg-red-500/10", "ring-red-500/30", "text-red-200");
       }
 
-      // Simple HTML escape
       function escapeHtml(s) {
         return String(s).replace(/[&<>"']/g, (c) => ({
           "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -160,13 +162,13 @@ const title = "Party Jukebox — Request";
         `;
 
         try {
-          const url = \`https://itunes.apple.com/search?term=\${encodeURIComponent(q)}&entity=song&limit=10\`;
+          const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=10`;
           const r = await fetch(url, { mode: "cors" });
 
           if (!r.ok) {
             $("results").innerHTML = `
               <div class="rounded-2xl bg-red-500/10 p-4 ring-1 ring-red-500/20 text-sm text-red-200">
-                Search failed (\${r.status}). Try again.
+                Search failed (${r.status}). Try again.
               </div>`;
             return;
           }
@@ -190,11 +192,11 @@ const title = "Party Jukebox — Request";
             return;
           }
 
-          // Spotify-ish media rows for results
           $("results").innerHTML = results.map((t, i) => `
             <button
               class="group w-full text-left rounded-2xl bg-black/30 ring-1 ring-white/10 px-4 py-3 hover:bg-white/5 transition flex items-center gap-3"
               data-idx="${i}"
+              type="button"
             >
               <img
                 src="${escapeHtml(t.artworkUrl100 || "")}"
@@ -230,7 +232,7 @@ const title = "Party Jukebox — Request";
                 </div>
               `;
 
-              const requestedBy = ""; // optional
+              const requestedBy = "";
 
               const resp = await fetch("/api/request", {
                 method: "POST",
@@ -274,88 +276,97 @@ const title = "Party Jukebox — Request";
       }
 
       async function refreshRequests() {
-        const r = await fetch("/api/requests?limit=50", { cache: "no-store" });
-        const data = await r.json();
-        const voted = getVoted();
+        try {
+          const r = await fetch("/api/requests?limit=50", { cache: "no-store" });
+          const data = await r.json();
+          const voted = getVoted();
 
-        $("requests").innerHTML = (data.results || []).map(row => {
-          const spotifySearch = `https://open.spotify.com/search/${encodeURIComponent(row.track_name + " " + row.artist_name)}`;
-          const disabled = voted.has(row.id);
-          const art = row.artwork_url || "";
+          $("requests").innerHTML = (data.results || []).map(row => {
+            const spotifySearch = `https://open.spotify.com/search/${encodeURIComponent(row.track_name + " " + row.artist_name)}`;
+            const disabled = voted.has(row.id);
+            const art = row.artwork_url || "";
 
-          return `
-            <div class="rounded-2xl bg-white/5 ring-1 ring-white/10 backdrop-blur px-4 py-3 flex items-center justify-between gap-4">
-              <!-- Media row (like Spotify) -->
-              <div class="flex items-center gap-3 min-w-0">
-                <img
-                  src="${escapeHtml(art)}"
-                  alt=""
-                  class="h-12 w-12 rounded-lg bg-white/5 ring-1 ring-white/10 object-cover"
-                  loading="lazy"
-                />
-                <div class="min-w-0">
-                  <div class="font-extrabold text-neutral-100 truncate">${escapeHtml(row.track_name)}</div>
-                  <div class="text-sm text-neutral-300 truncate">
-                    ${escapeHtml(row.artist_name)}${row.album_name ? " • " + escapeHtml(row.album_name) : ""}
+            return `
+              <div class="rounded-2xl bg-white/5 ring-1 ring-white/10 backdrop-blur px-4 py-3 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3 min-w-0">
+                  <img
+                    src="${escapeHtml(art)}"
+                    alt=""
+                    class="h-12 w-12 rounded-lg bg-white/5 ring-1 ring-white/10 object-cover"
+                    loading="lazy"
+                  />
+                  <div class="min-w-0">
+                    <div class="font-extrabold text-neutral-100 truncate">${escapeHtml(row.track_name)}</div>
+                    <div class="text-sm text-neutral-300 truncate">
+                      ${escapeHtml(row.artist_name)}${row.album_name ? " • " + escapeHtml(row.album_name) : ""}
+                    </div>
+                    <a class="text-xs text-neutral-400 hover:text-neutral-200 underline underline-offset-2"
+                      href="${spotifySearch}" target="_blank" rel="noreferrer">
+                      Open in Spotify
+                    </a>
                   </div>
-                  <a class="text-xs text-neutral-400 hover:text-neutral-200 underline underline-offset-2"
-                     href="${spotifySearch}" target="_blank" rel="noreferrer">
-                    Open in Spotify
-                  </a>
-                </div>
-              </div>
-
-              <!-- Votes + button -->
-              <div class="flex items-center gap-3 shrink-0">
-                <div class="rounded-full bg-black/30 px-3 py-2 ring-1 ring-white/10 text-center">
-                  <div class="text-[10px] uppercase tracking-wider text-neutral-400">votes</div>
-                  <div class="text-lg font-black leading-none">${row.votes}</div>
                 </div>
 
-                <button
-                  class="vote rounded-full px-4 py-2 text-sm font-extrabold transition
-                    ${disabled
-                      ? "bg-white/5 text-neutral-500 ring-1 ring-white/10 cursor-not-allowed"
-                      : "bg-[#1DB954] text-black hover:brightness-110 active:brightness-95"}"
-                  data-id="${row.id}"
-                  ${disabled ? "disabled" : ""}
-                  title="${disabled ? "You already voted" : "Vote"}"
-                >
-                  👍
-                </button>
+                <div class="flex items-center gap-3 shrink-0">
+                  <div class="rounded-full bg-black/30 px-3 py-2 ring-1 ring-white/10 text-center">
+                    <div class="text-[10px] uppercase tracking-wider text-neutral-400">votes</div>
+                    <div class="text-lg font-black leading-none">${row.votes}</div>
+                  </div>
+
+                  <button
+                    class="vote rounded-full px-4 py-2 text-sm font-extrabold transition
+                      ${disabled
+                        ? "bg-white/5 text-neutral-500 ring-1 ring-white/10 cursor-not-allowed"
+                        : "bg-[#1DB954] text-black hover:brightness-110 active:brightness-95"}"
+                    data-id="${row.id}"
+                    ${disabled ? "disabled" : ""}
+                    title="${disabled ? "You already voted" : "Vote"}"
+                    type="button"
+                  >
+                    👍
+                  </button>
+                </div>
               </div>
+            `;
+          }).join("");
+
+          [...document.querySelectorAll("button.vote")].forEach(btn => {
+            btn.addEventListener("click", async () => {
+              const id = btn.getAttribute("data-id");
+              const voted = getVoted();
+              if (voted.has(id)) return;
+
+              voted.add(id);
+              saveVoted(voted);
+
+              const resp = await fetch("/api/vote", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id })
+              });
+
+              if (!resp.ok) {
+                voted.delete(id);
+                saveVoted(voted);
+                const txt = await resp.text().catch(() => "");
+                showToast("err", `Vote failed. ${escapeHtml(txt)}`);
+                return;
+              }
+
+              await refreshRequests();
+            });
+          });
+        } catch (e) {
+          console.error(e);
+          $("requests").innerHTML = `
+            <div class="rounded-2xl bg-red-500/10 p-4 ring-1 ring-red-500/20 text-sm text-red-200">
+              Failed to load requests.
             </div>
           `;
-        }).join("");
-
-        [...document.querySelectorAll("button.vote")].forEach(btn => {
-          btn.addEventListener("click", async () => {
-            const id = btn.getAttribute("data-id");
-            const voted = getVoted();
-            if (voted.has(id)) return;
-
-            voted.add(id); saveVoted(voted);
-
-            const resp = await fetch("/api/vote", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id })
-            });
-
-            if (!resp.ok) {
-              // revert vote locally if server failed
-              voted.delete(id);
-              saveVoted(voted);
-              const txt = await resp.text().catch(() => "");
-              showToast("err", `Vote failed. ${escapeHtml(txt)}`);
-              return;
-            }
-
-            await refreshRequests();
-          });
-        });
+        }
       }
 
+      // Wire up events
       $("btnSearch").addEventListener("click", search);
       $("q").addEventListener("keydown", (e) => { if (e.key === "Enter") search(); });
 
@@ -364,6 +375,7 @@ const title = "Party Jukebox — Request";
         showToast("ok", "Refreshed requests.");
       });
 
+      // Initial load
       refreshRequests();
       setInterval(refreshRequests, 10000);
     </script>
