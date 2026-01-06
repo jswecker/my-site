@@ -42,14 +42,14 @@ const title = "Party Jukebox — Request";
         <div class="flex flex-col gap-2">
           <a
             href="/"
-            class="rounded-full bg-white/5 px-4 py-2 text-sm font-semibold text-neutral-200 ring-1 ring-white/10 hover:bg-white/10"
+            class="rounded-full bg-white/5 px-8 py-4 text-base font-semibold text-neutral-200 ring-1 ring-white/10 hover:bg-white/10"
           >
             Home
           </a>
 
           <a
             href="/screen"
-            class="rounded-full bg-[#1DB954] px-4 py-2 text-sm font-extrabold text-black hover:brightness-110 active:brightness-95"
+            class="rounded-full bg-[#1DB954] px-8 py-4 text-base font-extrabold text-black hover:brightness-110 active:brightness-95"
           >
             View Screen →
           </a>
@@ -60,7 +60,7 @@ const title = "Party Jukebox — Request";
       <div id="toast" class="mt-6 hidden rounded-2xl p-4 text-sm ring-1"></div>
 
       <!-- Search card -->
-      <section class="mt-6 rounded-3xl bg-white/5 p-6 ring-1 ring-white/10 backdrop-blur">
+      <section class="mt-10 rounded-[32px] bg-white/5 p-8 ring-1 ring-white/10 backdrop-blur shadow-[0_30px_80px_-40px_rgba(0,0,0,0.9)]">
         <div class="flex items-end justify-between gap-4">
           <div>
             <label for="q" class="block text-sm font-semibold text-neutral-200">Search</label>
@@ -72,11 +72,11 @@ const title = "Party Jukebox — Request";
         <!-- BIG search row -->
         <div class="mt-4 flex flex-col sm:flex-row gap-3">
           <div class="relative w-full">
-            <span class="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-neutral-500 text-lg">⌕</span>
+            <span class="pointer-events-none absolute left-6 top-1/2 -translate-y-1/2 text-neutral-500 text-xl">⌕</span>
             <input
               id="q"
-              class="w-full rounded-full bg-black/30 py-4 pl-12 pr-5 text-base sm:text-lg text-neutral-100 outline-none
-                     ring-1 ring-white/10 placeholder:text-neutral-500 focus:ring-[#1DB954]/55"
+              class="w-full rounded-full bg-black/40 py-5 pl-14 pr-6 text-lg text-neutral-100 outline-none
+                    ring-1 ring-white/10 placeholder:text-neutral-500 focus:ring-[#1DB954]/55"
               placeholder="Search songs, artists…"
               autocomplete="off"
             />
@@ -85,8 +85,7 @@ const title = "Party Jukebox — Request";
           <div class="flex gap-3">
             <button
               id="btnSearch"
-              class="rounded-full bg-[#1DB954] px-8 py-4 text-base sm:text-lg font-extrabold text-black
-                     hover:brightness-110 active:brightness-95"
+              class="rounded-full bg-[#1DB954] px-10 py-5 text-lg font-extrabold text-black hover:brightness-110 active:brightness-95"
               type="button"
             >
               Search
@@ -95,8 +94,8 @@ const title = "Party Jukebox — Request";
             <button
               id="btnRefresh"
               type="button"
-              class="rounded-full bg-white/10 px-6 py-4 text-base sm:text-lg font-extrabold text-neutral-100
-                     ring-1 ring-white/15 hover:bg-white/15 active:bg-white/10"
+              class="rounded-full bg-white/10 px-10 py-5 text-lg font-extrabold text-neutral-100
+                ring-1 ring-white/15 hover:bg-white/15 active:bg-white/10"
             >
               ↻ Refresh
             </button>
@@ -104,6 +103,11 @@ const title = "Party Jukebox — Request";
         </div>
 
         <div id="results" class="mt-5 space-y-2"></div>
+        <div class="mt-10 flex items-end justify-between">
+          <h3 class="text-xl font-extrabold tracking-tight">Search Results</h3>
+        </div>
+
+        <div id="results" class="mt-4 space-y-2"></div>
       </section>
 
       <!-- Requests list -->
@@ -194,14 +198,14 @@ const title = "Party Jukebox — Request";
 
           $("results").innerHTML = results.map((t, i) => `
             <button
-              class="group w-full text-left rounded-2xl bg-black/30 ring-1 ring-white/10 px-4 py-3 hover:bg-white/5 transition flex items-center gap-3"
+              class="group w-full text-left rounded-2xl bg-black/35 ring-1 ring-white/10 px-5 py-4 hover:bg-white/5 transition flex items-center gap-4"
               data-idx="${i}"
               type="button"
             >
               <img
                 src="${escapeHtml(t.artworkUrl100 || "")}"
                 alt=""
-                class="h-12 w-12 rounded-lg ring-1 ring-white/10 bg-white/5 object-cover"
+                class="h-14 w-14 rounded-xl ring-1 ring-white/10 bg-white/5 object-cover"
                 loading="lazy"
               />
               <div class="min-w-0 flex-1">
@@ -215,7 +219,7 @@ const title = "Party Jukebox — Request";
 
               <div class="shrink-0 flex items-center gap-2">
                 <span class="text-xs text-neutral-400">${t.trackTimeMillis ? msToMinSec(t.trackTimeMillis) : ""}</span>
-                <span class="rounded-full bg-[#1DB954] px-4 py-2 text-xs font-extrabold text-black group-hover:brightness-110">
+                <span class="rounded-full bg-[#1DB954] px-6 py-3 text-sm font-extrabold text-black group-hover:brightness-110">
                   Request
                 </span>
               </div>
@@ -287,7 +291,7 @@ const title = "Party Jukebox — Request";
             const art = row.artwork_url || "";
 
             return `
-              <div class="rounded-2xl bg-white/5 ring-1 ring-white/10 backdrop-blur px-4 py-3 flex items-center justify-between gap-4">
+              <div class="rounded-2xl bg-white/5 ring-1 ring-white/10 backdrop-blur px-5 py-4 flex items-center justify-between gap-4">
                 <div class="flex items-center gap-3 min-w-0">
                   <img
                     src="${escapeHtml(art)}"
@@ -308,13 +312,13 @@ const title = "Party Jukebox — Request";
                 </div>
 
                 <div class="flex items-center gap-3 shrink-0">
-                  <div class="rounded-full bg-black/30 px-3 py-2 ring-1 ring-white/10 text-center">
+                  <div class="shrink-0 rounded-full bg-black/35 px-6 py-3 ring-1 ring-white/10 text-center">
                     <div class="text-[10px] uppercase tracking-wider text-neutral-400">votes</div>
-                    <div class="text-lg font-black leading-none">${row.votes}</div>
+                    <div class="text-2xl font-black leading-none">${row.votes}</div>
                   </div>
 
                   <button
-                    class="vote rounded-full px-4 py-2 text-sm font-extrabold transition
+                    class="vote rounded-full px-8 py-4 text-lg font-extrabold transition
                       ${disabled
                         ? "bg-white/5 text-neutral-500 ring-1 ring-white/10 cursor-not-allowed"
                         : "bg-[#1DB954] text-black hover:brightness-110 active:brightness-95"}"
