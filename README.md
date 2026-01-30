@@ -1,48 +1,52 @@
+# 🎶 Party Jukebox
 
-# Astro Starter Kit: Basics
+Party Jukebox is a live song-request web app built with **Astro**, **Cloudflare Pages Functions**, and **Cloudflare D1**.  
+Users can search for tracks, submit requests, and vote on songs in real time.
 
-```sh
-npm create astro@latest -- --template basics
-```
+---
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## 🧱 Tech Stack
 
-## 🚀 Project Structure
+- **Frontend:** Astro
+- **Backend:** Cloudflare Pages Functions (`functions/api/*`)
+- **Database:** Cloudflare D1 (SQLite)
+- **Local Dev & Deploy:** Wrangler
+- **Hosting:** Cloudflare Pages
 
-Party Jukebox
-Inside of your Astro project, you'll see the following folders and files:
+---
+
+## 📁 Project Structure
 
 ```text
 /
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
+├── public/                  # Static assets
+├── src/                     # Astro frontend
+│   ├── components/
+│   ├── layouts/
+│   └── pages/
+├── functions/               # Cloudflare Pages Functions
+│   └── api/
+│       ├── requests.get.ts
+│       ├── request.post.ts
+│       ├── vote.post.ts
+│       └── ...
+├── migrations/              # D1 SQL migrations
+├── dist/                    # Astro build output (generated)
+├── wrangler.toml
 └── package.json
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## Local Development/Testing:
+```
+npm install
+npm run build
+wrangler d1 migrations apply party_jukebox_db --local
+wrangler pages dev dist --local
+```
+### Delete Local Wrangler state
+```
+# macOS / Linux
+rm -rf .wrangler/state
+# Windows PowerShell
+Remove-Item -Recurse -Force .\.wrangler\state
+```
