@@ -1,5 +1,13 @@
 PRAGMA foreign_keys=OFF;
 
+-- Add columns that may not exist in the original schema (0001)
+ALTER TABLE requests ADD COLUMN track_name TEXT;
+ALTER TABLE requests ADD COLUMN artist_name TEXT;
+ALTER TABLE requests ADD COLUMN album_name TEXT;
+ALTER TABLE requests ADD COLUMN artwork_url TEXT;
+ALTER TABLE requests ADD COLUMN track_time_ms INTEGER;
+ALTER TABLE requests ADD COLUMN requested_by TEXT;
+
 CREATE TABLE requests_new (
   id TEXT PRIMARY KEY,
   created_at TEXT NOT NULL,
@@ -9,8 +17,8 @@ CREATE TABLE requests_new (
   request_count INTEGER NOT NULL DEFAULT 1,
 
   track_id INTEGER NOT NULL UNIQUE,
-  track_name TEXT NOT NULL,
-  artist_name TEXT NOT NULL,
+  track_name TEXT,        -- allow NULL for old rows
+  artist_name TEXT,       -- allow NULL for old rows
   album_name TEXT,
   artwork_url TEXT,
   track_time_ms INTEGER,

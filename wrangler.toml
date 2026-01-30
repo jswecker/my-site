@@ -1,6 +1,10 @@
 name = "party-jukebox"
 compatibility_date = "2026-01-04"
 
+
+[assets]
+directory = "./dist"         # <-- Astro build output
+
 [[d1_databases]]
 binding = "DB"
 database_name = "party_jukebox_db"
